@@ -3,3 +3,16 @@ __pycache__/
 *.pyc
 output/
 .env
+*.mp4
+*.mov
+*.png
+*.jpg
+
+# Unity
+SceneGenAgent/Library/
+SceneGenAgent/Temp/
+SceneGenAgent/Logs/
+SceneGenAgent/UserSettings/
+SceneGenAgent/obj/
+SceneGenAgent/*.sln
+SceneGenAgent/*.csproj

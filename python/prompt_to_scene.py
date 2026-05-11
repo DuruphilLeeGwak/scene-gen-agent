@@ -2,7 +2,10 @@ import anthropic
 import json
 import os
 import sys
+from pathlib import Path
+from dotenv import load_dotenv
 
+load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
 # --- 설정 ---
 API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 OUTPUT_PATH = "../output/scene.json"
