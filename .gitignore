@@ -5,8 +5,7 @@ output/
 .env
 *.mp4
 *.mov
-*.png
-*.jpg
+    
 
 # Unity
 SceneGenAgent/Library/
