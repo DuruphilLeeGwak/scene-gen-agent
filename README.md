@@ -4,6 +4,12 @@
 >
 > Now extended into a full material-to-scene pipeline: real-world material capture → PBR texture generation via ControlNet → LLM scene design → automated evaluation.
 
+## Current Direction
+
+Building a fully automated pipeline from real material photos to Unity-ready PBR texture sets, driven by LLM scene design and evaluated by Claude Vision API. Primary motivation: demonstrate scalable environment data synthesis applicable to robotics foundation model training and XR spatial computing. Portfolio target: Foster + Partners Applied R+D, Software Developer XR.
+
+**Active phase:** Phase 1 — Material Capture to PBR Texture Pipeline (Steps 1.1–1.2 complete as of 18 Jun 2026)
+
 ---
 
 ## Demo
@@ -186,7 +192,8 @@ scene-gen-agent/
 │   └── output/                   # Auto-generated per run: YYYY-MM-DD_<material>/
 ├── python/
 │   ├── prompt_to_scene.py        # Claude API → JSON pipeline
-│   └── capture_to_pbr.py         # Material photo → source_crop (Step 1.1 complete)
+│   ├── capture_to_pbr.py         # Material photo → source_crop (Step 1.1)
+│   └── comfy_albedo.py           # ComfyUI API → albedo via ControlNet Tile (Step 1.2)
 ├── SceneGenAgent/
 │   └── Assets/
 │       └── Scripts/
@@ -234,12 +241,14 @@ Remove lighting influence from raw photo. Flatten to diffuse color only.
 
 Use ControlNet (Canny or Tile model) to generate a lighting-free albedo from the cleaned photo.
 
-- [ ] Set up ComfyUI workflow with ControlNet Canny or Tile conditioning
-- [ ] Tune prompt and denoise strength for material type
-- [ ] Validate output: albedo should be flat, no baked shadows
-- [ ] Output: `albedo.png`
+- [x] Set up ComfyUI workflow with ControlNet Canny or Tile conditioning
+- [x] Tune prompt and denoise strength for material type
+- [x] Validate output: albedo should be flat, no baked shadows
+- [x] Output: `albedo.png`
 
-**Cleared:** —
+**Cleared:** 18 Jun 2026
+
+**Notes:** Color output natural. Texture slightly artificial — may need denoise tuning per material category. Shadow/lighting removal result inconclusive; revisit if downstream steps reveal issues.
 
 ---
 
@@ -391,6 +400,7 @@ Goal: Use Claude Vision API to evaluate generated scenes for material coherence,
 |---|---|---|
 | 18 Jun 2026 | — | Project roadmap initialized. Extended pipeline direction defined. |
 | 18 Jun 2026 | 1.1 | `capture_to_pbr.py` written. Background crop (contour bounding box) + CLAHE brightness flatten + 512×512 resize. `pipeline/` folder structure created. 4 test material photos processed. |
+| 18 Jun 2026 | 1.2 | `comfy_albedo.py` written. ComfyUI API + ControlNet Tile (denoise 0.4) → `albedo.png` x4. Color output natural; texture slightly artificial, shadow removal inconclusive — to revisit if needed. |
 
 ---
 
