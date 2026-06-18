@@ -180,9 +180,13 @@ python prompt_to_scene.py "dark warehouse with 3 boxes and 1 spotlight"
 
 ```
 scene-gen-agent/
+├── pipeline/
+│   ├── input/
+│   │   └── raw/                  # Drop source material photos here (gitignored)
+│   └── output/                   # Auto-generated per run: YYYY-MM-DD_<material>/
 ├── python/
 │   ├── prompt_to_scene.py        # Claude API → JSON pipeline
-│   └── capture_to_pbr.py         # Material photo → PBR texture set (in development)
+│   └── capture_to_pbr.py         # Material photo → source_crop (Step 1.1 complete)
 ├── SceneGenAgent/
 │   └── Assets/
 │       └── Scripts/
@@ -217,12 +221,12 @@ Goal: Given a single smartphone photo of a real material, automatically output a
 
 Remove lighting influence from raw photo. Flatten to diffuse color only.
 
-- [ ] Select first test material (concrete, stone, or fabric)
-- [ ] Photograph under consistent lighting conditions
-- [ ] Write Python script to normalize brightness and reduce specular highlights
-- [ ] Output: cleaned source image ready for ControlNet
+- [x] Select first test material (concrete, stone, or fabric)
+- [x] Photograph under consistent lighting conditions
+- [x] Write Python script to normalize brightness and reduce specular highlights
+- [x] Output: cleaned source image ready for ControlNet
 
-**Cleared:** —
+**Cleared:** 18 Jun 2026
 
 ---
 
@@ -386,6 +390,7 @@ Goal: Use Claude Vision API to evaluate generated scenes for material coherence,
 | Date | Step | Work Done |
 |---|---|---|
 | 18 Jun 2026 | — | Project roadmap initialized. Extended pipeline direction defined. |
+| 18 Jun 2026 | 1.1 | `capture_to_pbr.py` written. Background crop (contour bounding box) + CLAHE brightness flatten + 512×512 resize. `pipeline/` folder structure created. 4 test material photos processed. |
 
 ---
 
