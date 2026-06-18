@@ -4,6 +4,12 @@
 >
 > Now extended into a full material-to-scene pipeline: real-world material capture → PBR texture generation via ControlNet → LLM scene design → automated evaluation.
 
+## Current Direction
+
+Building a fully automated pipeline from real material photos to Unity-ready PBR texture sets, driven by LLM scene design and evaluated by Claude Vision API. Primary motivation: demonstrate scalable environment data synthesis applicable to robotics foundation model training and XR spatial computing. Portfolio target: Foster + Partners Applied R+D, Software Developer XR.
+
+**Active phase:** Phase 1 — Material Capture to PBR Texture Pipeline (Steps 1.1–1.2 complete as of 18 Jun 2026)
+
 ---
 
 ## Demo
@@ -186,7 +192,8 @@ scene-gen-agent/
 │   └── output/                   # Auto-generated per run: YYYY-MM-DD_<material>/
 ├── python/
 │   ├── prompt_to_scene.py        # Claude API → JSON pipeline
-│   └── capture_to_pbr.py         # Material photo → source_crop (Step 1.1 complete)
+│   ├── capture_to_pbr.py         # Material photo → source_crop (Step 1.1)
+│   └── comfy_albedo.py           # ComfyUI API → albedo via ControlNet Tile (Step 1.2)
 ├── SceneGenAgent/
 │   └── Assets/
 │       └── Scripts/
