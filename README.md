@@ -156,14 +156,14 @@ scene-gen-agent/
 ```
 
 ---
-# Development Roadmap
+# Development Roadmap /4 weeks, target completion mid July(2026.06.18~07.16)
 
 > This document tracks active development progress.
 > Each phase is cleared incrementally. Dates are updated as work completes.
 
 ---
 
-## Phase 1 — Material Capture to PBR Texture Pipeline
+## Phase 1 — Material Capture to PBR Texture Pipeline  (06.18 ~ 07.02)
 
 **Goal:** Given a single smartphone photo of a real material, automatically output a PBR texture set (albedo / normal / roughness / metallic) ready for use in Unity or Unreal Engine 5.
 
@@ -248,7 +248,7 @@ Apply generated textures in engine. Verify physical plausibility under different
 
 ---
 
-## Phase 2 — LLM Scene Design from Material Metadata
+## Phase 2 — LLM Scene Design from Material Metadata(07.03~07.09)
 
 **Goal:** Feed material properties (extracted from Phase 1) into Claude API to automatically design an interior scene layout.
 
@@ -283,7 +283,7 @@ Apply generated textures in engine. Verify physical plausibility under different
 
 ---
 
-## Phase 3 — Automated Evaluation
+## Phase 3 — Automated Evaluation(07.10~07.16)
 
 **Goal:** Use Claude Vision API to evaluate generated scenes for material coherence, lighting interaction, and spatial quality.
 
