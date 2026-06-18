@@ -8,8 +8,8 @@ import uuid
 import shutil
 from pathlib import Path
 
-# ComfyUI 기본 서버 주소
-COMFY_URL = "http://127.0.0.1:8188"
+# ComfyUI 서버 주소 (데스크탑 앱은 8000 포트 사용)
+COMFY_URL = "http://127.0.0.1:8000"
 
 
 def check_server():
@@ -143,9 +143,15 @@ def queue_prompt(workflow: dict) -> str:
         headers={"Content-Type": "application/json"},
         method="POST"
     )
-    with urllib.request.urlopen(req) as resp:
-        result = json.loads(resp.read())
-    return result["prompt_id"]
+    try:
+        with urllib.request.urlopen(req) as resp:
+            result = json.loads(resp.read())
+        return result["prompt_id"]
+    except urllib.error.HTTPError as e:
+        # 400 에러 시 ComfyUI가 반환하는 상세 오류 출력
+        body = e.read().decode()
+        print(f"\nComfyUI error {e.code}: {body}")
+        sys.exit(1)
 
 
 def wait_for_completion(prompt_id: str, timeout: int = 120) -> bool:
