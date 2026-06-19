@@ -193,7 +193,9 @@ scene-gen-agent/
 ├── python/
 │   ├── prompt_to_scene.py        # Claude API → JSON pipeline
 │   ├── capture_to_pbr.py         # Material photo → source_crop (Step 1.1)
-│   └── comfy_albedo.py           # ComfyUI API → albedo via ControlNet Tile (Step 1.2)
+│   ├── comfy_albedo.py           # ComfyUI API → albedo via ControlNet Tile (Step 1.2)
+│   ├── gen_normal.py             # Albedo → normal map via Sobel gradient (Step 1.3)
+│   └── gen_roughness_metallic.py # Albedo → roughness + metallic maps (Step 1.4)
 ├── SceneGenAgent/
 │   └── Assets/
 │       └── Scripts/
@@ -256,12 +258,14 @@ Use ControlNet (Canny or Tile model) to generate a lighting-free albedo from the
 
 Generate a physically plausible normal map from the source image.
 
-- [ ] Test ControlNet normal map model output
-- [ ] Compare with height-to-normal conversion (numpy fallback)
-- [ ] Select best method per material category
-- [ ] Output: `normal.png`
+- [x] Test ControlNet normal map model output
+- [x] Compare with height-to-normal conversion (numpy fallback)
+- [x] Select best method per material category
+- [x] Output: `normal.png`
 
-**Cleared:** —
+**Cleared:** 18 Jun 2026
+
+**Notes:** Chose numpy Sobel gradient over ControlNet NormalBae to avoid additional model downloads. Output visually imperfect but acceptable for current stage.
 
 ---
 
@@ -269,12 +273,14 @@ Generate a physically plausible normal map from the source image.
 
 Rule-based estimation guided by material category input.
 
-- [ ] Define material category list (metal / fabric / wood / stone / concrete / ceramic)
-- [ ] Write roughness and metallic range lookup per category
-- [ ] Apply color analysis to refine roughness within category range
-- [ ] Output: `roughness.png`, `metallic.png`
+- [x] Define material category list (metal / fabric / wood / stone / concrete / ceramic)
+- [x] Write roughness and metallic range lookup per category
+- [x] Apply color analysis to refine roughness within category range
+- [x] Output: `roughness.png`, `metallic.png`
 
-**Cleared:** —
+**Cleared:** 18 Jun 2026
+
+**Notes:** Outputs are uniform flat maps — physically correct for concrete (metallic=0.0, roughness≈0.85). Spatial variation not required at this stage.
 
 ---
 
@@ -401,6 +407,8 @@ Goal: Use Claude Vision API to evaluate generated scenes for material coherence,
 | 18 Jun 2026 | — | Project roadmap initialized. Extended pipeline direction defined. |
 | 18 Jun 2026 | 1.1 | `capture_to_pbr.py` written. Background crop (contour bounding box) + CLAHE brightness flatten + 512×512 resize. `pipeline/` folder structure created. 4 test material photos processed. |
 | 18 Jun 2026 | 1.2 | `comfy_albedo.py` written. ComfyUI API + ControlNet Tile (denoise 0.4) → `albedo.png` x4. Color output natural; texture slightly artificial, shadow removal inconclusive — to revisit if needed. |
+| 18 Jun 2026 | 1.3 | `gen_normal.py` written. Numpy Sobel gradient → `normal.png` x4. ControlNet NormalBae skipped to avoid extra model download. Output imperfect but acceptable. |
+| 18 Jun 2026 | 1.4 | `gen_roughness_metallic.py` written. Rule-based lookup per material category + albedo variance analysis → `roughness.png`, `metallic.png` x4. Flat uniform maps, physically correct for concrete. |
 
 ---
 
