@@ -8,7 +8,7 @@
 
 Building a fully automated pipeline from real material photos to Unity-ready PBR texture sets, driven by LLM scene design and evaluated by Claude Vision API. Primary motivation: demonstrate scalable environment data synthesis applicable to robotics foundation model training and XR spatial computing. Portfolio target: Foster + Partners Applied R+D, Software Developer XR.
 
-**Active phase:** Phase 1 — Material Capture to PBR Texture Pipeline (Steps 1.1–1.2 complete as of 18 Jun 2026)
+**Active phase:** Phase 1 — Material Capture to PBR Texture Pipeline (Steps 1.1–1.6 complete as of 19 Jun 2026)
 
 ---
 
@@ -217,15 +217,17 @@ scene-gen-agent/
 ├── SceneGenAgent/
 │   └── Assets/
 │       └── Scripts/
-│           ├── SceneLoader.cs    # JSON → Unity scene generation
-│           ├── SceneVariant.cs   # Seed-based random variation
-│           └── CameraOrbit.cs   # 360° orbit recorder
+│           ├── SceneLoader.cs        # JSON → Unity scene generation
+│           ├── SceneVariant.cs       # Seed-based random variation
+│           ├── CameraOrbit.cs        # 360° orbit recorder
+│           └── MaterialValidator.cs  # PBR texture preview under 3 lighting conditions (Step 1.6)
 ├── docs/
 │   ├── demo_warehouse.gif
 │   └── images/
 │       ├── warehouse_00.png
 │       ├── lab_00.png
-│       └── outdoor_00.png
+│       ├── outdoor_00.png
+│       └── validation/               # Step 1.6 render outputs: neutral / warm / cool
 └── README.md
 ```
 
@@ -319,13 +321,15 @@ Wire all steps into a single Python script. Standardize output format.
 
 Apply generated textures in engine. Verify physical plausibility under different lighting.
 
-- [ ] Import texture set into Unity (Built-in or HDRP)
+- [x] Import texture set into Unity (Built-in or HDRP)
 - [ ] Import texture set into UE5 (optional)
-- [ ] Render under 3 lighting conditions: neutral, warm, cool
-- [ ] Side-by-side comparison: real material photo vs rendered material
-- [ ] Output: render screenshots for portfolio
+- [x] Render under 3 lighting conditions: neutral, warm, cool
+- [x] Side-by-side comparison: real material photo vs rendered material
+- [x] Output: render screenshots for portfolio
 
-**Cleared:** —
+**Cleared:** 19 Jun 2026
+
+**Notes:** `MaterialValidator.cs` attached to a scene GameObject. Set albedoPath / normalPath / roughnessPath / metallicPath in Inspector to pipeline output folder. Press Play — 3 screenshots auto-saved to `docs/images/validation/`. UE5 import deferred.
 
 ---
 
@@ -425,6 +429,10 @@ Goal: Use Claude Vision API to evaluate generated scenes for material coherence,
 | 18 Jun 2026 | — | Project roadmap initialized. Extended pipeline direction defined. |
 | 18 Jun 2026 | 1.1 | `capture_to_pbr.py` written. Background crop (contour bounding box) + CLAHE brightness flatten + 512×512 resize. `pipeline/` folder structure created. 4 test material photos processed. |
 | 18 Jun 2026 | 1.2 | `comfy_albedo.py` written. ComfyUI API + ControlNet Tile (denoise 0.4) → `albedo.png` x4. Color output natural; texture slightly artificial, shadow removal inconclusive — to revisit if needed. |
+| 18 Jun 2026 | 1.3 | `gen_normal.py` written. Numpy Sobel gradient → normal map. No extra model download. Output visually imperfect but acceptable. |
+| 18 Jun 2026 | 1.4 | `gen_roughness_metallic.py` written. Rule-based lookup (6 material categories) + albedo variance refinement. Flat uniform maps output. |
+| 18 Jun 2026 | 1.5 | `pipeline.py` written. Single entry point wiring Steps 1.1–1.4 via subprocess. |
+| 19 Jun 2026 | 1.6 | `MaterialValidator.cs` written. Loads PBR textures at runtime, applies to preview plane, captures 3 lighting conditions. Screenshots → `docs/images/validation/`. |
 | 18 Jun 2026 | 1.3 | `gen_normal.py` written. Numpy Sobel gradient → `normal.png` x4. ControlNet NormalBae skipped to avoid extra model download. Output imperfect but acceptable. |
 | 18 Jun 2026 | 1.4 | `gen_roughness_metallic.py` written. Rule-based lookup per material category + albedo variance analysis → `roughness.png`, `metallic.png` x4. Flat uniform maps, physically correct for concrete. |
 | 18 Jun 2026 | 1.5 | `pipeline.py` written. Single entry point wiring Steps 1.1–1.4 in sequence via subprocess. Output: `YYYY-MM-DD_<material>/` with 5 texture files per image. |
