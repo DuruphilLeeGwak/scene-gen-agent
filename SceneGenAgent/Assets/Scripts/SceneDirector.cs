@@ -60,7 +60,8 @@ public class SceneDirector : MonoBehaviour
     {
         if (!string.IsNullOrEmpty(pythonExePath) && File.Exists(pythonExePath))
             return pythonExePath;
-        string venvPy = Path.Combine(RepoRoot, "python", "venv", "Scripts", "python.exe");
+        // venv is at repo root (not inside python/)
+        string venvPy = Path.Combine(RepoRoot, "venv", "Scripts", "python.exe");
         return File.Exists(venvPy) ? venvPy : "python";
     }
 
