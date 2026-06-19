@@ -8,7 +8,7 @@
 
 Building a fully automated pipeline from real material photos to Unity-ready PBR texture sets, driven by LLM scene design and evaluated by Claude Vision API. Primary motivation: demonstrate scalable environment data synthesis applicable to robotics foundation model training and XR spatial computing. Portfolio target: Foster + Partners Applied R+D, Software Developer XR.
 
-**Active phase:** Phase 2 — LLM Scene Design (Steps 2.1–2.3 complete as of 19 Jun 2026)
+**Active phase:** Phase 3 — Automated Evaluation (Steps 3.1–3.2 complete as of 19 Jun 2026)
 
 ---
 
@@ -213,7 +213,10 @@ scene-gen-agent/
 │   ├── comfy_albedo.py           # ComfyUI API → albedo via ControlNet Tile (Step 1.2)
 │   ├── gen_normal.py             # Albedo → normal map via Sobel gradient (Step 1.3)
 │   ├── gen_roughness_metallic.py # Albedo → roughness + metallic maps (Step 1.4)
-│   └── pipeline.py               # Full pipeline entry point: Steps 1.1–1.4 (Step 1.5)
+│   ├── pipeline.py               # Full pipeline entry point: Steps 1.1–2.1 (Step 1.5)
+│   ├── extract_metadata.py       # Texture metadata → texture_library.json (Step 2.1)
+│   ├── prompt_to_scene.py        # LLM scene + texture assignment → scene.json (Step 2.2)
+│   └── evaluate_scene.py         # Claude Vision API evaluation → evaluation_report.json (Step 3.2)
 ├── SceneGenAgent/
 │   └── Assets/
 │       └── Scripts/
@@ -399,22 +402,25 @@ Goal: Use Claude Vision API to evaluate generated scenes for material coherence,
 
 **Step 3.1 — Evaluation Criteria Definition**
 
-- [ ] Define scoring dimensions: material consistency, lighting plausibility, spatial composition
-- [ ] Write evaluation prompt for Claude Vision API
-- [ ] Output: JSON score per scene variant
+- [x] Define scoring dimensions: material consistency, lighting plausibility, spatial composition
+- [x] Write evaluation prompt for Claude Vision API
+- [x] Output: JSON score per scene variant
 
-**Cleared:** —
+**Cleared:** 19 Jun 2026
+
+**Notes:** Three dimensions scored 1–5 with required reasoning. System prompt embedded in `evaluate_scene.py`.
 
 ---
 
 **Step 3.2 — Evaluation Pipeline**
 
-- [ ] Capture screenshots of generated scenes automatically
-- [ ] Pass to Claude Vision API with evaluation prompt
-- [ ] Aggregate scores across variants
-- [ ] Output: `evaluation_report.json`
+- [x] Pass scene screenshots to Claude Vision API with evaluation prompt
+- [x] Aggregate scores across variants
+- [x] Output: `evaluation_report.json`
 
-**Cleared:** —
+**Cleared:** 19 Jun 2026
+
+**Notes:** `evaluate_scene.py --images <folder>` evaluates all PNGs in a folder. Auto-detects `docs/images/validation/` by default. Saves `evaluation_report.json` to latest pipeline output folder.
 
 ---
 
@@ -442,6 +448,8 @@ Goal: Use Claude Vision API to evaluate generated scenes for material coherence,
 | 19 Jun 2026 | 2.1 | `extract_metadata.py` written. Reads albedo/roughness/metallic per texture set → `texture_library.json`. Integrated into `pipeline.py`. |
 | 19 Jun 2026 | 2.2 | `prompt_to_scene.py` updated. Loads texture library, appends descriptions to LLM prompt, LLM assigns `texture_id` per object. |
 | 19 Jun 2026 | 2.3 | `SceneLoader.cs` updated. Reads `texture_id` from scene.json, auto-detects latest pipeline output, loads PBR maps at runtime. |
+| 19 Jun 2026 | 3.1 | Evaluation criteria defined: material_consistency / lighting_plausibility / spatial_composition, each scored 1–5 with reasoning. |
+| 19 Jun 2026 | 3.2 | `evaluate_scene.py` written. Sends PNGs to Claude Vision API, aggregates scores, saves `evaluation_report.json`. |
 | 18 Jun 2026 | 1.5 | `pipeline.py` written. Single entry point wiring Steps 1.1–1.4 in sequence via subprocess. Output: `YYYY-MM-DD_<material>/` with 5 texture files per image. |
 
 ---
