@@ -1,30 +1,35 @@
 using UnityEngine;
 using System.Collections;
 using System.IO;
+using System.Linq;
 
 // Step 1.6 — PBR Material Validation
-// Loads generated texture set from pipeline/output, applies to a preview plane,
-// renders under 3 lighting conditions (neutral / warm / cool), captures screenshots.
+// Auto-detects the latest pipeline/output/YYYY-MM-DD_<material>/ folder and loads
+// the first texture set found. Inspector fields override auto-detection if filled.
 //
 // Usage:
-//   1. Attach this script to an empty GameObject in Unity.
-//   2. Set PBR texture paths in the Inspector (albedoPath, normalPath, etc.).
-//   3. Press Play — screenshots auto-saved to outputPath.
+//   1. Attach to an empty GameObject in Unity.
+//   2. Leave all paths blank for auto-detection, or override individual paths in Inspector.
+//   3. Press Play — 3 screenshots saved to docs/images/validation/.
 public class MaterialValidator : MonoBehaviour
 {
-    [Header("PBR Texture Paths (absolute)")]
+    [Header("PBR Texture Paths — leave blank to auto-detect from latest pipeline output")]
     public string albedoPath;
     public string normalPath;
     public string roughnessPath;
     public string metallicPath;
 
     [Header("Output")]
-    public string outputPath = @"C:\CurrentWorks\scene-gen-agent\docs\images\validation";
+    public string outputPath = "";  // blank = auto: <repo_root>/docs/images/validation
 
     private Light validationLight;
     private Material previewMaterial;
 
-    // 3 lighting conditions: name / light color / intensity / directional angle
+    // Repo root = two levels above Application.dataPath (Assets/)
+    // dataPath:  .../SceneGenAgent/Assets
+    // repoRoot:  .../scene-gen-agent
+    private string RepoRoot => Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
+
     private static readonly LightingCondition[] Conditions = {
         new LightingCondition("neutral", new Color(1.00f, 1.00f, 1.00f), 1.0f, new Vector3(50f, -30f, 0f)),
         new LightingCondition("warm",    new Color(1.00f, 0.82f, 0.55f), 1.3f, new Vector3(30f,  45f, 0f)),
@@ -33,13 +38,63 @@ public class MaterialValidator : MonoBehaviour
 
     void Start()
     {
+        ResolveTexturePaths();
         BuildScene();
         StartCoroutine(CaptureSequence());
     }
 
+    // Fill any blank path fields by scanning the latest pipeline/output/ subfolder
+    void ResolveTexturePaths()
+    {
+        string pipelineOutput = Path.Combine(RepoRoot, "pipeline", "output");
+
+        if (!Directory.Exists(pipelineOutput))
+        {
+            Debug.LogWarning($"[MaterialValidator] pipeline/output not found at: {pipelineOutput}");
+            return;
+        }
+
+        // Subfolders named YYYY-MM-DD_<material> — sort descending to get the latest
+        string latestFolder = Directory.GetDirectories(pipelineOutput)
+            .OrderByDescending(d => Path.GetFileName(d))
+            .FirstOrDefault();
+
+        if (latestFolder == null)
+        {
+            Debug.LogWarning("[MaterialValidator] No output folders found in pipeline/output");
+            return;
+        }
+
+        Debug.Log($"[MaterialValidator] Auto-detected folder: {latestFolder}");
+
+        // Fill each path if not already set in Inspector
+        if (string.IsNullOrEmpty(albedoPath))
+            albedoPath = FirstMatch(latestFolder, "*_albedo.png");
+        if (string.IsNullOrEmpty(normalPath))
+            normalPath = FirstMatch(latestFolder, "*_normal.png");
+        if (string.IsNullOrEmpty(roughnessPath))
+            roughnessPath = FirstMatch(latestFolder, "*_roughness.png");
+        if (string.IsNullOrEmpty(metallicPath))
+            metallicPath = FirstMatch(latestFolder, "*_metallic.png");
+
+        // Log resolved paths
+        Debug.Log($"[MaterialValidator] albedo:    {albedoPath}");
+        Debug.Log($"[MaterialValidator] normal:    {normalPath}");
+        Debug.Log($"[MaterialValidator] roughness: {roughnessPath}");
+        Debug.Log($"[MaterialValidator] metallic:  {metallicPath}");
+    }
+
+    // Returns the first file matching a glob pattern in a folder, sorted ascending
+    static string FirstMatch(string folder, string pattern)
+    {
+        string[] matches = Directory.GetFiles(folder, pattern);
+        if (matches.Length == 0) return "";
+        System.Array.Sort(matches);
+        return matches[0];
+    }
+
     void BuildScene()
     {
-        // Preview plane — horizontal, camera looks down at an angle
         GameObject plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
         plane.name = "PBR_Preview";
         plane.transform.position = Vector3.zero;
@@ -49,7 +104,6 @@ public class MaterialValidator : MonoBehaviour
         ApplyPBRTextures();
         plane.GetComponent<Renderer>().material = previewMaterial;
 
-        // Camera angle: look down at 50° to show surface texture and lighting clearly
         Camera cam = Camera.main;
         if (cam != null)
         {
@@ -59,23 +113,18 @@ public class MaterialValidator : MonoBehaviour
             cam.clearFlags = CameraClearFlags.SolidColor;
         }
 
-        // Single directional light — color/intensity/angle set per capture
         GameObject lightGo = new GameObject("ValidationLight");
         validationLight = lightGo.AddComponent<Light>();
         validationLight.type = LightType.Directional;
 
-        // Low ambient so the directional light color reads clearly
         RenderSettings.ambientLight = new Color(0.12f, 0.12f, 0.12f);
     }
 
     void ApplyPBRTextures()
     {
-        // Albedo → _MainTex
         if (FileReady(albedoPath))
             previewMaterial.mainTexture = LoadTex(albedoPath);
 
-        // Normal map → _BumpMap
-        // Runtime-loaded PNGs: Standard shader reads the RGB channels directly as XYZ normals.
         if (FileReady(normalPath))
         {
             previewMaterial.SetTexture("_BumpMap", LoadTex(normalPath));
@@ -83,26 +132,22 @@ public class MaterialValidator : MonoBehaviour
             previewMaterial.SetFloat("_BumpScale", 1.0f);
         }
 
-        // Roughness map (grayscale flat) → sample average → convert to smoothness (1 - r)
         if (FileReady(roughnessPath))
-        {
-            float roughness = AverageR(LoadTex(roughnessPath));
-            previewMaterial.SetFloat("_Glossiness", 1f - roughness);
-        }
+            previewMaterial.SetFloat("_Glossiness", 1f - AverageR(LoadTex(roughnessPath)));
 
-        // Metallic map (grayscale flat) → sample average → _Metallic
         if (FileReady(metallicPath))
-        {
-            float metallic = AverageR(LoadTex(metallicPath));
-            previewMaterial.SetFloat("_Metallic", metallic);
-        }
+            previewMaterial.SetFloat("_Metallic", AverageR(LoadTex(metallicPath)));
     }
 
     IEnumerator CaptureSequence()
     {
-        yield return null; // let scene initialize
+        yield return null;
 
-        Directory.CreateDirectory(outputPath);
+        string outDir = string.IsNullOrEmpty(outputPath)
+            ? Path.Combine(RepoRoot, "docs", "images", "validation")
+            : outputPath;
+
+        Directory.CreateDirectory(outDir);
 
         foreach (var c in Conditions)
         {
@@ -112,14 +157,14 @@ public class MaterialValidator : MonoBehaviour
 
             yield return new WaitForEndOfFrame();
 
-            string file = Path.Combine(outputPath, $"material_validation_{c.name}.png");
+            string file = Path.Combine(outDir, $"material_validation_{c.name}.png");
             ScreenCapture.CaptureScreenshot(file);
             Debug.Log($"[MaterialValidator] Captured: {file}");
 
-            yield return new WaitForSeconds(1f); // gap between captures
+            yield return new WaitForSeconds(1f);
         }
 
-        Debug.Log("[MaterialValidator] All 3 captures complete.");
+        Debug.Log($"[MaterialValidator] Done. All captures saved to: {outDir}");
     }
 
     static Texture2D LoadTex(string path)
@@ -129,7 +174,6 @@ public class MaterialValidator : MonoBehaviour
         return tex;
     }
 
-    // Sample average R channel (grayscale maps store value in R)
     static float AverageR(Texture2D tex)
     {
         Color32[] px = tex.GetPixels32();
@@ -141,7 +185,6 @@ public class MaterialValidator : MonoBehaviour
     static bool FileReady(string path) =>
         !string.IsNullOrEmpty(path) && File.Exists(path);
 
-    // Plain struct to hold a lighting condition — avoids ValueTuple deconstruct issues in older Unity
     private struct LightingCondition
     {
         public string name;
