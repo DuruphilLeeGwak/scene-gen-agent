@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using TMPro;
 
 // Scene Director — Unity UI frontend for the LLM scene generation pipeline.
 //
@@ -23,11 +24,12 @@ using System.IO;
 public class SceneDirector : MonoBehaviour
 {
     [Header("UI References")]
-    public InputField promptField;
-    public InputField countField;
-    public Text statusText;
-    public Text costText;
-    public Text variantText;
+    public TMP_InputField promptField;
+    public TMP_InputField countField;
+    public TMP_Text statusText;
+    public TMP_Text costText;
+    public TMP_Text variantText;
+    public Button generateButton;
     public Button prevButton;
     public Button nextButton;
 
@@ -76,9 +78,7 @@ public class SceneDirector : MonoBehaviour
 
         countField.text = "1";
 
-        // Enter key in prompt field triggers generation
-        promptField.onSubmit.AddListener(OnPromptSubmit);
-
+        generateButton.onClick.AddListener(OnGenerateClicked);
         prevButton.onClick.AddListener(ShowPrev);
         nextButton.onClick.AddListener(ShowNext);
 
@@ -94,11 +94,11 @@ public class SceneDirector : MonoBehaviour
 
     // -------------------------------------------------------------------------
 
-    void OnPromptSubmit(string prompt)
+    void OnGenerateClicked()
     {
+        string prompt = promptField.text;
         if (isGenerating || string.IsNullOrWhiteSpace(prompt)) return;
-        int count = ParseCount();
-        StartCoroutine(GenerateAll(prompt.Trim(), count));
+        StartCoroutine(GenerateAll(prompt.Trim(), ParseCount()));
     }
 
     IEnumerator GenerateAll(string prompt, int count)
