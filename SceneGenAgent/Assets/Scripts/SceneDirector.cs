@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -89,8 +90,10 @@ public class SceneDirector : MonoBehaviour
     void Update()
     {
         if (isGenerating) return;
-        if (Input.GetKeyDown(KeyCode.LeftArrow))  ShowPrev();
-        if (Input.GetKeyDown(KeyCode.RightArrow)) ShowNext();
+        var kb = Keyboard.current;
+        if (kb == null) return;
+        if (kb.leftArrowKey.wasPressedThisFrame)  ShowPrev();
+        if (kb.rightArrowKey.wasPressedThisFrame) ShowNext();
     }
 
     // -------------------------------------------------------------------------
