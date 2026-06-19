@@ -143,10 +143,10 @@ The extended pipeline addresses a recurring problem in XR and architectural visu
 
 ```bash
 git clone https://github.com/DuruphilLeeGwak/scene-gen-agent.git
-cd scene-gen-agent/python
+cd scene-gen-agent
 python -m venv venv
 venv\Scripts\activate
-pip install anthropic python-dotenv
+pip install anthropic python-dotenv opencv-python Pillow numpy
 ```
 
 ### 2. Set API Key
@@ -157,11 +157,28 @@ Create `.env` in the root directory:
 ANTHROPIC_API_KEY=your_api_key_here
 ```
 
-### 3. Generate a Scene
+### 3. Run the Material-to-PBR Pipeline
+
+Drop raw material photos into `pipeline/input/raw/`, then:
 
 ```bash
-cd python
-python prompt_to_scene.py "dark warehouse with 3 boxes and 1 spotlight"
+# Start ComfyUI first, then:
+python python/pipeline.py --material concrete
+```
+
+Output: `pipeline/output/YYYY-MM-DD_concrete/`
+```
+001_source_crop.png   # preprocessed input
+001_albedo.png        # ControlNet Tile output
+001_normal.png        # Sobel gradient normal map
+001_roughness.png     # rule-based roughness
+001_metallic.png      # rule-based metallic
+```
+
+### 4. Generate a Scene (original pipeline)
+
+```bash
+python python/prompt_to_scene.py "dark warehouse with 3 boxes and 1 spotlight"
 ```
 
 ### 4. Load in Unity
@@ -195,7 +212,8 @@ scene-gen-agent/
 │   ├── capture_to_pbr.py         # Material photo → source_crop (Step 1.1)
 │   ├── comfy_albedo.py           # ComfyUI API → albedo via ControlNet Tile (Step 1.2)
 │   ├── gen_normal.py             # Albedo → normal map via Sobel gradient (Step 1.3)
-│   └── gen_roughness_metallic.py # Albedo → roughness + metallic maps (Step 1.4)
+│   ├── gen_roughness_metallic.py # Albedo → roughness + metallic maps (Step 1.4)
+│   └── pipeline.py               # Full pipeline entry point: Steps 1.1–1.4 (Step 1.5)
 ├── SceneGenAgent/
 │   └── Assets/
 │       └── Scripts/
@@ -288,12 +306,12 @@ Rule-based estimation guided by material category input.
 
 Wire all steps into a single Python script. Standardize output format.
 
-- [ ] Single entry point: `python capture_to_pbr.py <image_path> <material_category>`
-- [ ] Output folder: `output/<material_name>/` with 4 textures and source image
-- [ ] File naming: `<name>_albedo.png`, `<name>_normal.png`, `<name>_roughness.png`, `<name>_metallic.png`
-- [ ] README usage example updated
+- [x] Single entry point: `python pipeline.py --material <category>`
+- [x] Output folder: `pipeline/output/YYYY-MM-DD_<material>/` with 4 textures and source image
+- [x] File naming: `<n>_source_crop.png`, `<n>_albedo.png`, `<n>_normal.png`, `<n>_roughness.png`, `<n>_metallic.png`
+- [x] README usage example updated
 
-**Cleared:** —
+**Cleared:** 18 Jun 2026
 
 ---
 
@@ -409,6 +427,7 @@ Goal: Use Claude Vision API to evaluate generated scenes for material coherence,
 | 18 Jun 2026 | 1.2 | `comfy_albedo.py` written. ComfyUI API + ControlNet Tile (denoise 0.4) → `albedo.png` x4. Color output natural; texture slightly artificial, shadow removal inconclusive — to revisit if needed. |
 | 18 Jun 2026 | 1.3 | `gen_normal.py` written. Numpy Sobel gradient → `normal.png` x4. ControlNet NormalBae skipped to avoid extra model download. Output imperfect but acceptable. |
 | 18 Jun 2026 | 1.4 | `gen_roughness_metallic.py` written. Rule-based lookup per material category + albedo variance analysis → `roughness.png`, `metallic.png` x4. Flat uniform maps, physically correct for concrete. |
+| 18 Jun 2026 | 1.5 | `pipeline.py` written. Single entry point wiring Steps 1.1–1.4 in sequence via subprocess. Output: `YYYY-MM-DD_<material>/` with 5 texture files per image. |
 
 ---
 
