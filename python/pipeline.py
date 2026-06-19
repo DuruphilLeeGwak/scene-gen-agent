@@ -1,4 +1,5 @@
 import argparse
+import json
 import sys
 import subprocess
 from pathlib import Path
@@ -6,11 +7,12 @@ from datetime import date
 
 
 # 각 단계 스크립트 경로 (pipeline.py 기준 상대 경로)
-SCRIPTS_DIR = Path(__file__).parent
+SCRIPTS_DIR     = Path(__file__).parent
 CAPTURE_SCRIPT  = SCRIPTS_DIR / "capture_to_pbr.py"
 ALBEDO_SCRIPT   = SCRIPTS_DIR / "comfy_albedo.py"
 NORMAL_SCRIPT   = SCRIPTS_DIR / "gen_normal.py"
 ROUGHMET_SCRIPT = SCRIPTS_DIR / "gen_roughness_metallic.py"
+METADATA_SCRIPT = SCRIPTS_DIR / "extract_metadata.py"
 
 
 def run_step(label: str, cmd: list):
@@ -80,6 +82,17 @@ def main():
     run_step("Step 1.4 — Roughness and metallic estimation", [
         sys.executable, str(ROUGHMET_SCRIPT),
         "--material", args.material,
+    ])
+
+    # run_info.json — 재료 카테고리와 날짜를 기록, extract_metadata.py가 읽음
+    run_info = {"material": args.material, "date": today}
+    with open(Path(run_output) / "run_info.json", "w") as f:
+        json.dump(run_info, f, indent=2)
+
+    # Step 2.1 — 텍스처 메타데이터 추출 → texture_library.json
+    run_step("Step 2.1 — Texture metadata extraction", [
+        sys.executable, str(METADATA_SCRIPT),
+        "--folder", run_output,
     ])
 
     # 최종 출력 파일 목록 요약
